@@ -1,5 +1,5 @@
 <?php
-$file = file_get_contents("day3.txt");
+$file = file_get_contents("day2.txt");
 $words = explode("\n", $file);
 $two = 0;
 $three = 0;
