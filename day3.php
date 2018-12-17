@@ -4,30 +4,49 @@ $claims = explode("\n", $file);
 $fabric_w = 0;
 $fabric_h = 0;
 
+$dict = [];
+
 for ($claimcount=0; $claimcount < count($claims); $claimcount++) {
+  
   $claim = parseClaim($claims[$claimcount]);
-  $w = $claim["left"] + $claim['w'];
-  $h = $claim['top'] + $claim['h'];
-  $fabric_w = max($fabric_w, $w);
-  $fabric_h = max($fabric_h, $h);
+  for ($i=0; $i<$claim['h']; $i++) {
+    for ($k=0; $k<$claim['w']; $k++) {
+
+      if (!array_key_exists("T" . strval($claim['top'] + $i), $dict)) {
+        $dict["T" . strval($i + $claim['top'])] = array();
+      }
+
+      if (!array_key_exists("T" . strval($k + $claim['left']), $dict["T" . strval($i + $claim['top'])])) {
+        $dict["T" . strval($i + $claim['top'])]["T" . strval($k + $claim['left'])] = 0;
+      } 
+
+      $dict["T" . strval($i + $claim['top'])]["T" . strval($k + $claim['left'])]++;
+    }
+  }
 }
 
-$matrices = [];
-
-foreach ($claims as $input) {
-  $claim = parseClaim($input);
-  $matrix = createMatrixFromClaim($claim);
-  $matrices[] = $matrix;
+$total = 0;
+foreach ($dict as $k => $data) {
+  foreach ($data as $k2 => $val) {
+    if ($val > 1) $total++;
+  }
 }
 
-$a = createMatrixFromClaim(parseClaim($claims[0]));
-$b = createMatrixFromClaim(parseClaim($claims[1]));
+echo $total;
 
-toStringMatrix($a);
-echo "\n\n";
-toStringMatrix($b);
-//toStringMatrix(createMatrixFromClaim(parseClaim($claims[0])));
+for ($claimcount=0; $claimcount < count($claims); $claimcount++) {
+  $single = true;
+  $claim = parseClaim($claims[$claimcount]);
+  for ($i=0; $i<$claim['h']; $i++) {
+    for ($k=0; $k<$claim['w']; $k++) {  
 
+      if ($dict["T" . strval($i + $claim['top'])]["T" . strval($k + $claim['left'])] > 1) {
+        $single = false;
+      }
+    }
+  }
+  if ($single) var_dump($claim);
+}
 
 function parseClaim($claim) {
   $parts = explode(" ", $claim);
@@ -42,53 +61,5 @@ function parseClaim($claim) {
     "h" => intval($size[1])
   ];
 }
-
-function createMatrixFromClaim($claim) {
-  global $fabric_h, $fabric_w;
-  $matrix = createMatrix($fabric_w, $fabric_h);
-
-  for($i = $claim['top']; $i < $claim['h']; $i++) {
-    for ($k=$claim['left']; $k < $claim['w']; $k++) {
-      $matrix[$i][$k] = 1;
-    }
-  }
-
-  return $matrix;
-}
-
-function createMatrix($h, $w) {
-  $matrix = [];
-  for ($i=0; $i < $h; $i++) {
-    $sub = [];
-    for ($k=0; $k < $w; $k++) {
-      $sub[] = 0;
-    }
-    $matrix[] = $sub;
-  }
-  return $matrix;
-}
-
-function matsum($a, $b) {
-  $matrix = [];
-  for ($i=0; $i < count($a); $i++) {
-    $sub = [];
-    for ($k=0; $k < count($a[0]); $k++) {
-      $sub[] = $a[$i][$k] + $b[$i][$k];
-    }
-    $matrix[] = $sub;
-  }
-  return $matrix;
-}
-
-function toStringMatrix($m) {
-  for ($i=0; $i < count($m); $i++) {
-    $line = $m[$i];
-    for ($k=0; $k < count($line); $k++) {
-      echo $line[$k] . " ";
-    }
-    echo "\n";
-  }
-}
-
 
 ?>
